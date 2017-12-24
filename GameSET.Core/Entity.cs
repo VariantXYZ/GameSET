@@ -1,4 +1,5 @@
-﻿using System.Collections.Specialized;
+﻿using System.Collections;
+using System.Collections.Generic;
 
 namespace GameSET.Core
 {
@@ -8,8 +9,8 @@ namespace GameSET.Core
     /// </summary>
     internal class Entity
     {
-        private OrderedDictionary stats = new OrderedDictionary();
+        private Dictionary<string, object> stats = new Dictionary<string, object>();
 
-        public OrderedDictionary Stats { get => stats; set => stats = value; }
+        public Dictionary<string, object> Stats { get => stats; set => stats = value; }
     }
 }

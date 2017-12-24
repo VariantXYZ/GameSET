@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace GameSET.Core
@@ -12,10 +13,28 @@ namespace GameSET.Core
     /// </summary>
     public class State
     {
+        private struct Statistic
+        {
+            public readonly string Name; 
+            public readonly string Alias;
+            public readonly string DefaultValue;
+            public readonly Type Type;
+            public readonly Func<object, object, object> StatisticHandler;
+
+            public Statistic(string name, string alias, string defaultValue, string type, Func<object, object, object> func)
+            {
+                Name = name;
+                Alias = alias;
+                DefaultValue = defaultValue;
+                Type = Type.GetType(type);
+                StatisticHandler = func;
+            }
+        }
+
         private static State currentState; // Maintain a reference to the current state so we can have C exports modify it
         private Dictionary<string, Entity> entities = new Dictionary<string, Entity>();
 
-        private OrderedDictionary statistics = new OrderedDictionary();
+        private Dictionary<string, Statistic> statistics = new Dictionary<string, Statistic>();
 
         public static void SetCurrentState(State st) => currentState = st;
 
@@ -32,42 +51,57 @@ namespace GameSET.Core
         }
 
         [DllExport("LogEvent", CallingConvention = CallingConvention.Cdecl)]
-        public static void LogEventCurrent(string entityName, string csvData)
+        public static void LogEventSingleCurrent(string entityName, string statisticName, string statisticValue)
         {
-            currentState.LogEvent(entityName, csvData);
+            currentState.LogEventSingle(entityName, statisticName, statisticValue);
+        }
+
+        [DllExport("LogEventMulti", CallingConvention = CallingConvention.Cdecl)]
+        public static void LogEventMultiCurrent(string entityName, string csvHeader, string csvData)
+        {
+            currentState.LogEventMulti(entityName, csvHeader, csvData);
         }
 
         [DllExport("AddStatistic", CallingConvention = CallingConvention.Cdecl)]
-        public static void AddStatisticCurrent(string name, string alias, string type, Func<object, object, object> statisticHandler)
+        public static void AddStatisticCurrent(string name, string alias, string defaultValue, string type, Func<object, object, object> statisticHandler)
         {
-            currentState.AddStatistic(name, alias, statisticHandler);
+            currentState.AddStatistic(name, alias, defaultValue, type, statisticHandler);
         }
 
-        public void LogEvent(string entityName, string csvData)
+        private void LogEventSingle(string entityName, string statisticName, string statisticValue)
         {
             if (!entities.ContainsKey(entityName))
                 entities[entityName] = new Entity();
 
+            if (!entities[entityName].Stats.ContainsKey(statisticName))
+                entities[entityName].Stats[statisticName] = statistics[statisticName].DefaultValue;
+
+            object value = statisticValue; // TODO: Properly cast this using the known type
+
+            entities[entityName].Stats[statisticName] = statistics[statisticName]
+                .StatisticHandler(entities[entityName].Stats[statisticName], value);
+        }
+
+        private void LogEventMulti(string entityName, string csvHeader, string csvData)
+        {
+            if (!entities.ContainsKey(entityName))
+                entities[entityName] = new Entity();
+
+            var header = Helper.ParseCSV(csvHeader);
             var stats = Helper.ParseCSV(csvData);
 
-            if (stats.Count > statistics.Count)
+            for(int i = 0; i < header.Count && i < stats.Count(); i++)
             {
-                // TODO: Log warning about possible loss of data
-            }
-
-            for (int i = 0; i < statistics.Count && i < stats.Count; i++)
-            {
-                entities[entityName].Stats[i] = (statistics[i] as Tuple<string, Func<object, object, object>>)
-                    .Item2(entities[entityName].Stats[i], stats[i]);
+                LogEventSingle(entityName, header[i], stats[i]);
             }
         }
 
-        public void AddStatistic(string name, string alias, string type, Func<object, object, object> statisticHandler)
+        public void AddStatistic(string name, string alias, string defaultValue, string type, Func<object, object, object> statisticHandler)
         {
-            if (statistics.Contains(name))
+            if (statistics.ContainsKey(name))
                 throw new Exception($"AddStatistic: {name} is already a known statistic for this state");
-            statistics.Add(name, new Tuple<string,
-                Func<object, object, object>>(alias, statisticHandler)); //OldValue, NewValue
+
+            statistics.Add(name, new Statistic(name, alias, defaultValue, type, statisticHandler));
         }
     }
 }

@@ -42,7 +42,14 @@ namespace GameSET.Core
         //static string ParseCSV_prevDelimiter = "";
         static Regex ParseCSV_rgxQuoted;
         #endregion Cache Results
-        public static List<string> ParseCSV(in string csv, string quoteChar = "\"", string delimiter = ",")
+        /// <summary>
+        /// 'Good enough' CSV parsing
+        /// </summary>
+        /// <param name="csv"></param>
+        /// <param name="quoteChar">Default quote character is """</param>
+        /// <param name="delimiter"></param>
+        /// <returns></returns>
+        public static List<string> ParseCSV(in string csv, string quoteChar = @"""""""", string delimiter = ",")
         {
             #region Preprocessing
             const string specialQuoteChars = @"\/*.[]>"; //Backslash has to be first
