@@ -35,22 +35,28 @@ namespace GameSET.Tests
             Func<string, dynamic, dynamic, dynamic> funcReplace =
                 (string entityName, dynamic oldObj, dynamic newObj) => newObj;
 
-            state.AddStatistic("Timestamp", "Timestamp", 0, "System.UInt32", funcUpdateTimestamp);
-            state.AddStatistic("Damage", "Damage", 0, "System.UInt32", funcUpdateDamage);
-            state.AddStatistic("Time", "Total Time (s)", 0, "System.UInt32", funcUpdateTime);
-            state.AddStatistic("DPS", "DPS", 0, "System.UInt32", funcReplace);
-
             string entityName1 = "Test1";
             string csvHeader1 = "Timestamp,Damage";
 
-            for (int i = 1; i < 1000; i++)
+            //5 states
+            for (int j = 0; j < 5; j++)
             {
-                string csvData1 = $"{1000*i},100";
-                State.LogEventMultiCurrent(entityName1, csvHeader1, csvData1);
-                Assert.IsTrue((uint)State.GetStatisticCurrent(entityName1, "Timestamp") == 1000 * i);
-                Assert.IsTrue((uint)State.GetStatisticCurrent(entityName1, "Damage") == 100 * i);
-                Assert.IsTrue((uint)State.GetStatisticCurrent(entityName1, "Time") == 1 * i);
-                Assert.IsTrue((uint)State.GetStatisticCurrent(entityName1, "DPS") == 100);
+                state.AddStatistic("Timestamp", "Timestamp", 0, "System.UInt32", funcUpdateTimestamp);
+                state.AddStatistic("Damage", "Damage", 0, "System.UInt32", funcUpdateDamage);
+                state.AddStatistic("Time", "Total Time (s)", 0, "System.UInt32", funcUpdateTime);
+                state.AddStatistic("DPS", "DPS", 0, "System.UInt32", funcReplace);
+
+                //10000 logs
+                for (int i = 1; i < 10000; i++)
+                {
+                    string csvData1 = $"{1000 * i},100";
+                    State.LogEventMultiCurrent(entityName1, csvHeader1, csvData1);
+                    Assert.IsTrue((uint)State.GetStatisticCurrent(entityName1, "Timestamp") == 1000 * i);
+                    Assert.IsTrue((uint)State.GetStatisticCurrent(entityName1, "Damage") == 100 * i);
+                    Assert.IsTrue((uint)State.GetStatisticCurrent(entityName1, "Time") == 1 * i);
+                    Assert.IsTrue((uint)State.GetStatisticCurrent(entityName1, "DPS") == 100);
+                }
+                state = new State();
             }
         }
     }
