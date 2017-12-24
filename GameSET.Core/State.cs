@@ -17,11 +17,11 @@ namespace GameSET.Core
         {
             public readonly string Name; 
             public readonly string Alias;
-            public readonly string DefaultValue;
+            public readonly dynamic DefaultValue;
             public readonly Type Type;
-            public readonly Func<object, object, object> StatisticHandler;
+            public readonly Func<string, dynamic, dynamic, dynamic> StatisticHandler;
 
-            public Statistic(string name, string alias, string defaultValue, string type, Func<object, object, object> func)
+            public Statistic(string name, string alias, dynamic defaultValue, string type, Func<string, dynamic, dynamic, dynamic> func)
             {
                 Name = name;
                 Alias = alias;
@@ -38,7 +38,7 @@ namespace GameSET.Core
 
         public static void SetCurrentState(State st) => currentState = st;
 
-        State(bool setCurrentState = true)
+        public State(bool setCurrentState = true)
         {
             if (setCurrentState)
             {
@@ -63,12 +63,23 @@ namespace GameSET.Core
         }
 
         [DllExport("AddStatistic", CallingConvention = CallingConvention.Cdecl)]
-        public static void AddStatisticCurrent(string name, string alias, string defaultValue, string type, Func<object, object, object> statisticHandler)
+        public static void AddStatisticCurrent(string name, string alias, object defaultValue, string type, Func<string, dynamic, dynamic, dynamic> statisticHandler)
         {
             currentState.AddStatistic(name, alias, defaultValue, type, statisticHandler);
         }
 
-        private void LogEventSingle(string entityName, string statisticName, string statisticValue)
+        [DllExport("GetStatistic", CallingConvention = CallingConvention.Cdecl)]
+        public static dynamic GetStatisticCurrent(string entityName, string statisticName)
+        {
+            return currentState.GetStatistic(entityName, statisticName);
+        }
+
+        public dynamic GetStatistic(string entityName, string statisticName)
+        {
+            return entities[entityName].Stats.ContainsKey(statisticName) ? Convert.ChangeType(entities[entityName].Stats[statisticName], statistics[statisticName].Type) : statistics[statisticName].DefaultValue;
+        }
+
+        public void LogEventSingle(string entityName, string statisticName, dynamic statisticValue)
         {
             if (!entities.ContainsKey(entityName))
                 entities[entityName] = new Entity();
@@ -76,13 +87,13 @@ namespace GameSET.Core
             if (!entities[entityName].Stats.ContainsKey(statisticName))
                 entities[entityName].Stats[statisticName] = statistics[statisticName].DefaultValue;
 
-            object value = statisticValue; // TODO: Properly cast this using the known type
+            dynamic value = Convert.ChangeType(statisticValue, statistics[statisticName].Type);
 
             entities[entityName].Stats[statisticName] = statistics[statisticName]
-                .StatisticHandler(entities[entityName].Stats[statisticName], value);
+                .StatisticHandler(entityName, entities[entityName].Stats[statisticName], value);
         }
 
-        private void LogEventMulti(string entityName, string csvHeader, string csvData)
+        public void LogEventMulti(string entityName, string csvHeader, string csvData)
         {
             if (!entities.ContainsKey(entityName))
                 entities[entityName] = new Entity();
@@ -96,7 +107,7 @@ namespace GameSET.Core
             }
         }
 
-        public void AddStatistic(string name, string alias, string defaultValue, string type, Func<object, object, object> statisticHandler)
+        public void AddStatistic(string name, string alias, object defaultValue, string type, Func<string, dynamic, dynamic, dynamic> statisticHandler)
         {
             if (statistics.ContainsKey(name))
                 throw new Exception($"AddStatistic: {name} is already a known statistic for this state");
