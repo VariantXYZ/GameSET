@@ -38,7 +38,7 @@ namespace GameSET.Core
         }
 
         [DllExport("AddStatistic", CallingConvention = CallingConvention.Cdecl)]
-        public static void AddStatisticCurrent(string name, string alias, Func<object, object, object> statisticHandler)
+        public static void AddStatisticCurrent(string name, string alias, string type, Func<object, object, object> statisticHandler)
         {
             currentState.AddStatistic(name, alias, statisticHandler);
         }
@@ -62,7 +62,7 @@ namespace GameSET.Core
             }
         }
 
-        public void AddStatistic(string name, string alias, Func<object, object, object> statisticHandler)
+        public void AddStatistic(string name, string alias, string type, Func<object, object, object> statisticHandler)
         {
             if (statistics.Contains(name))
                 throw new Exception($"AddStatistic: {name} is already a known statistic for this state");
