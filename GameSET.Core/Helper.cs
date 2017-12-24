@@ -49,7 +49,7 @@ namespace GameSET.Core
         /// <param name="quoteChar">Default quote character is """</param>
         /// <param name="delimiter"></param>
         /// <returns></returns>
-        public static List<string> ParseCSV(in string csv, string quoteChar = @"""""""", string delimiter = ",")
+        public static List<string> ParseCSV(string csv, string quoteChar = @"""""""", string delimiter = ",")
         {
             #region Preprocessing
             const string specialQuoteChars = @"\/*.[]>"; //Backslash has to be first

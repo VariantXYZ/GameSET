@@ -13,10 +13,10 @@ namespace GameSET.Tests
             State state = new State();
 
             Func<string, dynamic, dynamic, dynamic> funcUpdateTimestamp =
-                (string entityName, dynamic oldObj, dynamic newObj) => { state.LogEventSingle(entityName, "Time", (newObj - oldObj) / 1000); return newObj; };
+                (entityName, oldObj, newObj) => { state.LogEventSingle(entityName, "Time", (newObj - oldObj) / 1000); return newObj; };
 
             Func<string, dynamic, dynamic, dynamic> funcUpdateTime =
-                (string entityName, dynamic oldObj, dynamic newObj) =>
+                (entityName, oldObj, newObj) =>
                 {
                     if (oldObj + newObj != 0)
                         state.LogEventSingle(entityName, "DPS", state.GetStatistic(entityName, "Damage") / (oldObj + newObj));
@@ -24,7 +24,7 @@ namespace GameSET.Tests
                 };
 
             Func<string, dynamic, dynamic, dynamic> funcUpdateDamage =
-                (string entityName, dynamic oldObj, dynamic newObj) =>
+                (entityName, oldObj, newObj) =>
                 {
                     dynamic t = state.GetStatistic(entityName, "Time");
                     if (t != 0)
@@ -33,7 +33,7 @@ namespace GameSET.Tests
                 };
 
             Func<string, dynamic, dynamic, dynamic> funcReplace =
-                (string entityName, dynamic oldObj, dynamic newObj) => newObj;
+                (entityName, oldObj, newObj) => newObj;
 
             string entityName1 = "Test1";
             string csvHeader1 = "Timestamp,Damage";

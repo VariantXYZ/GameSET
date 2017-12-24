@@ -1,8 +1,6 @@
 ﻿using RGiesecke.DllExport;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace GameSET.Core
@@ -32,12 +30,10 @@ namespace GameSET.Core
         }
 
         private static State currentState; // Maintain a reference to the current state so we can have C exports modify it
-        private Dictionary<string, Entity> entities = new Dictionary<string, Entity>();
 
-        private Dictionary<string, Statistic> statistics = new Dictionary<string, Statistic>();
+        private Dictionary<string, Statistic> Statistics { get; } = new Dictionary<string, Statistic>();
 
-        private Dictionary<string, Statistic> Statistics { get => statistics; set => statistics = value; }
-        internal Dictionary<string, Entity> Entities { get => entities; set => entities = value; }
+        internal Dictionary<string, Entity> Entities { get; } = new Dictionary<string, Entity>();
 
         public static void SetCurrentState(State st) => currentState = st;
 
@@ -47,10 +43,6 @@ namespace GameSET.Core
             {
                 SetCurrentState(this);
             }
-        }
-
-        ~State()
-        {
         }
 
         [DllExport("LogEvent", CallingConvention = CallingConvention.Cdecl)]
@@ -104,7 +96,7 @@ namespace GameSET.Core
             var header = Helper.ParseCSV(csvHeader);
             var stats = Helper.ParseCSV(csvData);
 
-            for(int i = 0; i < header.Count && i < stats.Count(); i++)
+            for(int i = 0; i < header.Count && i < stats.Count; i++)
             {
                 LogEventSingle(entityName, header[i], stats[i]);
             }
