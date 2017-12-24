@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Specialized;
 
 namespace GameSET.Core
 {
@@ -10,8 +6,10 @@ namespace GameSET.Core
     /// An object to define an 'Entity'
     /// A dictionary of statistic names to values
     /// </summary>
-    public class Entity
+    internal class Entity
     {
-        private Dictionary<string, object> stats;
+        private OrderedDictionary stats = new OrderedDictionary();
+
+        public OrderedDictionary Stats { get => stats; set => stats = value; }
     }
 }

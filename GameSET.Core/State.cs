@@ -38,7 +38,7 @@ namespace GameSET.Core
         }
 
         [DllExport("AddStatistic", CallingConvention = CallingConvention.Cdecl)]
-        public static void AddStatisticCurrent(string name, string alias, Func<object, object> statisticHandler)
+        public static void AddStatisticCurrent(string name, string alias, Func<object, object, object> statisticHandler)
         {
             currentState.AddStatistic(name, alias, statisticHandler);
         }
@@ -47,14 +47,27 @@ namespace GameSET.Core
         {
             if (!entities.ContainsKey(entityName))
                 entities[entityName] = new Entity();
-            
+
+            var stats = Helper.ParseCSV(csvData);
+
+            if (stats.Count > statistics.Count)
+            {
+                // TODO: Log warning about possible loss of data
+            }
+
+            for (int i = 0; i < statistics.Count && i < stats.Count; i++)
+            {
+                entities[entityName].Stats[i] = (statistics[i] as Tuple<string, Func<object, object, object>>)
+                    .Item2(entities[entityName].Stats[i], stats[i]);
+            }
         }
 
-        public void AddStatistic(string name, string alias, Func<object, object> statisticHandler)
+        public void AddStatistic(string name, string alias, Func<object, object, object> statisticHandler)
         {
             if (statistics.Contains(name))
                 throw new Exception($"AddStatistic: {name} is already a known statistic for this state");
-            statistics.Add(name, new Tuple<string, Func<object, object>>(alias, statisticHandler));
+            statistics.Add(name, new Tuple<string,
+                Func<object, object, object>>(alias, statisticHandler)); //OldValue, NewValue
         }
     }
 }
