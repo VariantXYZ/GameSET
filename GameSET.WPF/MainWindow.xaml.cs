@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 
 namespace GameSET.WPF
 {
@@ -10,6 +11,13 @@ namespace GameSET.WPF
         public MainWindow()
         {
             InitializeComponent();
+            MouseLeftButtonDown += delegate { DragMove(); };
+            AllowsTransparency = true;
+        }
+
+        private void Transparency_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            Opacity = 1 - Transparency.Value;
         }
     }
 }
